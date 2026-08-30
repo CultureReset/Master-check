@@ -31,8 +31,14 @@ async function renderAppsCatalogPanel(container) {
 
   container.querySelectorAll('button[data-remove]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await adminApi(`/api/admin/apps-catalog/${btn.getAttribute('data-remove')}`, { method: 'DELETE' });
-      renderAppsCatalogPanel(container);
+      const id = btn.getAttribute('data-remove');
+      const ok = await confirmAction(`Retire "${id}" from the catalog? Every tenant with it installed keeps their existing install, but no new tenant can add it.`);
+      if (!ok) return;
+      try {
+        await adminApi(`/api/admin/apps-catalog/${id}`, { method: 'DELETE' });
+        showToast(`Retired "${id}".`, { tone: 'success' });
+        renderAppsCatalogPanel(container);
+      } catch (e) { showErrorToast(e); }
     });
   });
 
@@ -42,7 +48,8 @@ async function renderAppsCatalogPanel(container) {
     const description = document.getElementById('app-desc').value.trim();
     try {
       await adminApi('/api/admin/apps-catalog', { method: 'POST', body: JSON.stringify({ id, name, description }) });
+      showToast(`Added "${id}" to the catalog.`, { tone: 'success' });
       renderAppsCatalogPanel(container);
-    } catch (e) { alert(e.message); }
+    } catch (e) { showErrorToast(e); }
   });
 }

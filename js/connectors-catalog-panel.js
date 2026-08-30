@@ -31,8 +31,14 @@ async function renderConnectorsCatalogPanel(container) {
 
   container.querySelectorAll('button[data-remove]').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await adminApi(`/api/admin/connectors-catalog/${btn.getAttribute('data-remove')}`, { method: 'DELETE' });
-      renderConnectorsCatalogPanel(container);
+      const id = btn.getAttribute('data-remove');
+      const ok = await confirmAction(`Retire "${id}" from the catalog? Every tenant currently connected keeps their connection, but no new tenant can add it.`);
+      if (!ok) return;
+      try {
+        await adminApi(`/api/admin/connectors-catalog/${id}`, { method: 'DELETE' });
+        showToast(`Retired "${id}".`, { tone: 'success' });
+        renderConnectorsCatalogPanel(container);
+      } catch (e) { showErrorToast(e); }
     });
   });
 
@@ -46,7 +52,8 @@ async function renderConnectorsCatalogPanel(container) {
         method: 'POST',
         body: JSON.stringify({ id, name, description, composio_app: composio_app || undefined }),
       });
+      showToast(`Added "${id}" to the catalog.`, { tone: 'success' });
       renderConnectorsCatalogPanel(container);
-    } catch (e) { alert(e.message); }
+    } catch (e) { showErrorToast(e); }
   });
 }
