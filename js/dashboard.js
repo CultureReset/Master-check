@@ -5,6 +5,7 @@
 
 const PANELS = {
   tenants: renderTenantsPanel,
+  directory: renderDirectoryPanel,
   'apps-catalog': renderAppsCatalogPanel,
   'connectors-catalog': renderConnectorsCatalogPanel,
 };

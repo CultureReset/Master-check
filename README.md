@@ -21,6 +21,17 @@ any static file server.
   check `middleware/tenantAuth.js` runs. A tenant's session token gets a 403
   here, not partial access.
 
+## The Directory tab
+
+Card-grid layout adapted from `gcr-unified`'s `GCRCard.jsx` (image with a
+CSS-only fallback, category badge, name/description below) — but reading
+`api-layer-unified`'s `tenant_profiles` table instead of GCR's `entity`
+table, and without the GCR-specific pieces (live availability, star
+ratings, computed open/closed status) that this platform's simpler profile
+model has no data to support. This is the Chamber-of-Commerce white-label
+surface: every tenant's listing, editable inline by admin, regardless of
+what that tenant has set for themselves in `check-user-`'s Profile tab.
+
 ## Why the two catalog managers are separate files
 
 `js/apps-catalog-panel.js` and `js/connectors-catalog-panel.js` are not a
