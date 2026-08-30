@@ -9,15 +9,16 @@ async function renderTenantsPanel(container) {
     <div class="panel">
       <h2>Tenants</h2>
       <table>
-        <thead><tr><th>Slug</th><th>Apps</th><th>Connectors</th></tr></thead>
+        <thead><tr><th>Slug</th><th>Created</th><th>Apps</th><th>Connectors</th></tr></thead>
         <tbody>
           ${tenants.map(t => `
             <tr>
               <td>${t.slug}</td>
+              <td>${renderValue(t.created_at)}</td>
               <td>${t.apps.map(a => `<span class="pill">${a}</span>`).join('') || '<span class="muted">none</span>'}</td>
               <td>${t.connectors.map(c => `<span class="pill">${c.id} (${c.status})</span>`).join('') || '<span class="muted">none</span>'}</td>
             </tr>
-          `).join('') || '<tr><td colspan="3" class="muted">No tenants yet.</td></tr>'}
+          `).join('') || '<tr><td colspan="4" class="muted">No tenants yet.</td></tr>'}
         </tbody>
       </table>
     </div>
