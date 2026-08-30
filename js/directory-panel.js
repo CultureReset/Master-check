@@ -46,25 +46,44 @@ async function renderDirectoryPanel(container) {
   });
 }
 
+// Schema-driven via js/extracted/schema-form.js: real field types (email
+// input, url input for the photo) instead of seven identical text boxes,
+// and PATCH only sends what actually changed.
+const DIRECTORY_FIELDS = [
+  { name: 'category', label: 'Category', type: 'text' },
+  { name: 'description', label: 'Description', type: 'textarea' },
+  { name: 'address', label: 'Address', type: 'text' },
+  { name: 'phone', label: 'Phone', type: 'text' },
+  { name: 'email', label: 'Email', type: 'email', validate: (v) => (v && !v.includes('@')) ? 'Not a valid email address.' : null },
+  { name: 'hours', label: 'Hours', type: 'text' },
+  { name: 'photo_url', label: 'Photo URL', type: 'url' },
+];
+
 function renderEditForm(container, listing) {
   const editPanel = container.querySelector('#edit-panel');
-  const fields = ['category', 'description', 'address', 'phone', 'email', 'hours', 'photo_url'];
+  const initial = buildInitial(DIRECTORY_FIELDS, listing);
   editPanel.style.display = '';
   editPanel.innerHTML = `
     <h2>Edit — ${listing.name}</h2>
-    ${fields.map(f => `
-      <div style="margin-bottom:10px;">
-        <label style="display:block;font-size:11px;text-transform:uppercase;color:#8b949e;margin-bottom:4px;">${f}</label>
-        <input data-field="${f}" value="${(listing[f] || '').toString().replace(/"/g, '&quot;')}" style="width:100%;">
-      </div>
-    `).join('')}
+    ${DIRECTORY_FIELDS.map(f => renderFieldHtml(f, initial[f.name])).join('')}
     <button id="save-listing">Save</button>
   `;
   editPanel.querySelector('#save-listing').addEventListener('click', async () => {
-    const data = {};
-    fields.forEach(f => { data[f] = editPanel.querySelector(`[data-field="${f}"]`).value; });
-    await adminApi(`/api/admin/directory/${listing.tenant_id}`, { method: 'PATCH', body: JSON.stringify(data) });
-    renderDirectoryPanel(container);
+    const values = readFormValues(editPanel, DIRECTORY_FIELDS);
+    const errors = validateFields(DIRECTORY_FIELDS, values);
+    Object.entries(errors).forEach(([name, message]) => {
+      const errEl = editPanel.querySelector(`[data-error-for="${name}"]`);
+      if (errEl) errEl.textContent = message;
+    });
+    if (Object.keys(errors).length) return;
+
+    const changed = collectChangedValues(DIRECTORY_FIELDS, values, initial);
+    if (Object.keys(changed).length === 0) { showToast('Nothing changed.'); return; }
+    try {
+      await adminApi(`/api/admin/directory/${listing.tenant_id}`, { method: 'PATCH', body: JSON.stringify(changed) });
+      showToast(`Saved ${listing.name}.`, { tone: 'success' });
+      renderDirectoryPanel(container);
+    } catch (e) { showErrorToast(e); }
   });
   editPanel.scrollIntoView({ behavior: 'smooth' });
 }
